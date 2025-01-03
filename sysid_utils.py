@@ -1,19 +1,23 @@
+import warnings
 import numpy as np
 import casadi as cas
 from casadi import DM, MX, Function
 
 
-# Use just-in-time compilation to speed up the evaluation
+# Use just-in-time compilation if available
 if cas.Importer.has_plugin('clang'):
-    with_jit = True
-    compiler = 'clang'
+    WITH_JIT = True
+    COMPILER = 'clang'
 elif cas.Importer.has_plugin('shell'):
-    with_jit = True
-    compiler = 'shell'
+    WITH_JIT = True
+    COMPILER = 'shell'
 else:
-    print("WARNING: running without jit. This may result in very slow evaluation times")
-    with_jit = False
-    compiler = ''
+    warnings.warn(
+        "Running without jit. This may result in very slow "
+        "evaluation times"
+    )
+    WITH_JIT = False
+    COMPILER = ''
 
 
 def make_one_step_simulator(ode, dt, states, controls, params):
@@ -33,7 +37,7 @@ def make_one_step_simulator(ode, dt, states, controls, params):
 
 
 def make_n_step_simulator(ode, dt, states, controls, params, n_steps=10):
-    """Create a simulator function that simulates an n-step ahead
+    """Create a simulator function that simulates an n-step-ahead
     propagation of the system.
     """
     one_step = make_one_step_simulator(ode, dt, states, controls, params)
@@ -42,24 +46,24 @@ def make_n_step_simulator(ode, dt, states, controls, params, n_steps=10):
         X = one_step(X, controls, params)
 
     # Create CasADi function
-    return Function('one_sample', [states, controls, params], [X])
+    return Function('n_step', [states, controls, params], [X])
 
 
-def make_gauss_newton_solver(e, nlp, V, with_jit=with_jit, compiler=compiler):
+def make_gauss_newton_solver(e, nlp, V, with_jit=WITH_JIT, compiler=COMPILER):
     """Create a Gauss-Newton solver."""
     J = cas.jacobian(e, V)
     H = cas.triu(cas.mtimes(J.T, J))
     sigma = MX.sym("sigma")
-    hessLag = Function(
+    hess_lag = Function(
         'nlp_hess_l', 
-        {'x': V, 'lam_f': sigma, 'hess_gamma_x_x': sigma * H}, 
-        ['x', 'p', 'lam_f', 'lam_g'], 
-        ['hess_gamma_x_x'], 
-        dict(jit=with_jit, compiler=compiler)
+        {'x': V, 'lam_f': sigma, 'hess_gamma_x_x': sigma * H},
+        ['x', 'p', 'lam_f', 'lam_g'],
+        ['hess_gamma_x_x'],
+        {"jit": with_jit, "compiler": compiler}
     )
     return cas.nlpsol(
         "solver", 
         "ipopt", 
-        nlp, 
-        dict(hess_lag=hessLag, jit=with_jit, compiler=compiler)
+        nlp,
+        {"hess_lag": hess_lag, "jit": with_jit, "compiler": compiler}
     )

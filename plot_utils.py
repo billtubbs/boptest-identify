@@ -57,6 +57,7 @@ def make_ioplots_combined(
         time_name='time',
         time_range=None,
         var_rename_map=None,
+        titles=("Outputs", "Inputs")
     ):
 
     if time_range is None:
@@ -81,7 +82,7 @@ def make_ioplots_combined(
     else:
         label = "$y_{1-%d}$" % ny
     ax.set_ylabel(label)
-    ax.set_title("Outputs")
+    ax.set_title(titles[0])
     ax.grid()
 
     ax = axes[1]
@@ -96,7 +97,7 @@ def make_ioplots_combined(
     else:
         label = "$u_{1-%d}$" % nu
     ax.set_ylabel(label)
-    ax.set_title("Inputs")
+    ax.set_title(titles[1])
     ax.grid()
 
     axes[-1].set_xlabel('Time (days)')

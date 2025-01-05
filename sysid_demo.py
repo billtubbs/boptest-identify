@@ -57,7 +57,8 @@ print(sample_step)
 
 # f.mapaccum works on functions with the signature:
 #  f: (x, u) -> (x_next , y )
-all_samples = sample_step.mapaccum("all_samples", N)
+simulate = sample_step.mapaccum("simulate", N)
+print(simulate)
 
 
 ############ Simulating the system ##########
@@ -69,7 +70,7 @@ u_data = DM(0.1 * np.random.random(N))
 # Initial condition
 x0 = DM([0, 0])
 
-X_measured = all_samples(x0, u_data, cas.repmat(param_truth, 1, N))
+X_measured = simulate(x0, u_data, cas.repmat(param_truth, 1, N))
 
 # Output equation
 #   y(t) = x1(t)
@@ -84,7 +85,7 @@ y_data = X_measured[0, :].T
 
 # Note, it is in general a good idea to scale your decision variables such
 # that they are in the order of ~0.1..100
-X_symbolic = all_samples(x0, u_data, cas.repmat(params * scale, 1, N))
+X_symbolic = simulate(x0, u_data, cas.repmat(params * scale, 1, N))
 
 errors = y_data - X_symbolic[0, :].T
 

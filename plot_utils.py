@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 
 
 def make_ioplots(
-        data, 
-        input_names, 
-        measurement_names, 
-        available_inputs, 
-        available_measurements, 
+        data,
+        input_names,
+        measurement_names,
+        available_inputs,
+        available_measurements,
+        time_name='time',
         time_range=None,
         var_rename_map=None,
     ):
@@ -22,7 +23,7 @@ def make_ioplots(
     fig, axes = plt.subplots(ny + nu, 1, sharex=True, figsize=(7, 0.5 + 1.5 * (ny + nu)))
 
     for i, (ax, name) in enumerate(zip(axes[:ny], measurement_names)):
-        x = data.set_index('time_days').loc[time_range, name]
+        x = data.set_index(time_name).loc[time_range, name]
         unit = available_measurements[name]['Unit']
         if unit == 'K':
             x = x - 273.15
@@ -34,7 +35,7 @@ def make_ioplots(
         ax.grid()
 
     for i, (ax, name) in enumerate(zip(axes[ny:], input_names)):
-        x = data.set_index('time_days').loc[time_range, name]
+        x = data.set_index(time_name).loc[time_range, name]
         unit = available_inputs[name]['Unit']
         x.plot(ax=ax, drawstyle="steps-post", label=var_rename_map[name])
         label = "$u_{%d}$" % (i+1) + f" ({unit})"
@@ -48,11 +49,12 @@ def make_ioplots(
 
 
 def make_ioplots_combined(
-        data, 
-        input_names, 
-        measurement_names, 
-        available_inputs, 
-        available_measurements, 
+        data,
+        input_names,
+        measurement_names,
+        available_inputs,
+        available_measurements,
+        time_name='time',
         time_range=None,
         var_rename_map=None,
     ):
@@ -69,7 +71,7 @@ def make_ioplots_combined(
 
     ax = axes[0]
     x = (
-        data.set_index('time_days')
+        data.set_index(time_name)
         .loc[time_range, measurement_names]
         .rename(columns=var_rename_map)
     )
@@ -84,7 +86,7 @@ def make_ioplots_combined(
 
     ax = axes[1]
     x = (
-        data.set_index('time_days')
+        data.set_index(time_name)
         .loc[time_range, input_names]
         .rename(columns=var_rename_map)
     )
